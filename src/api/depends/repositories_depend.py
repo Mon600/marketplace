@@ -1,0 +1,21 @@
+from fastapi import Depends
+from typing import Annotated
+
+from api.depends.session_depend import SessionDep
+from db.repositories.announcemets_repository import AnnouncementRepository
+
+from db.repositories.user_repository import UserRepository
+
+
+def get_user_repository(session: SessionDep) -> UserRepository:
+    return UserRepository(session)
+
+user_repository = Annotated[UserRepository, Depends(get_user_repository)]
+
+
+def get_announcement_repository(session: SessionDep) -> AnnouncementRepository:
+    return AnnouncementRepository(session)
+
+announcement_repository = Annotated[AnnouncementRepository, Depends(get_announcement_repository)]
+
+
