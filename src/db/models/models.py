@@ -54,13 +54,14 @@ class AnnouncementsModel(Base):
     user_rel: Mapped["UserModel"] = relationship(back_populates="announcements_rel")
     category_id = mapped_column(ForeignKey('categories.id', ondelete='CASCADE'), index=True, nullable=False)
     category_rel: Mapped['CategoriesModel'] = relationship(back_populates="announcements_rel")
-    image_1: Mapped[Optional[str]]
-    image_2: Mapped[Optional[str]]
-    image_3: Mapped[Optional[str]]
-    image_4: Mapped[Optional[str]]
-    image_5: Mapped[Optional[str]]
-    image_6: Mapped[Optional[str]]
-    image_7: Mapped[Optional[str]]
-    image_8: Mapped[Optional[str]]
-    image_9: Mapped[Optional[str]]
-    image_10: Mapped[Optional[str]]
+    file_rel: Mapped[list["FileModel"]] = relationship(back_populates="announcements_rel")
+
+
+class FileModel(Base):
+    __tablename__ = 'files'
+
+    id: Mapped[pk]
+    announcement_id: Mapped[int] = mapped_column(ForeignKey('announcements.id', ondelete='CASCADE'))
+    type: Mapped[str] = mapped_column(String(30))
+    url: Mapped[str]
+    announcements_rel: Mapped["AnnouncementsModel"] = relationship(back_populates="file_rel")

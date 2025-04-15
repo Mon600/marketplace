@@ -1,5 +1,4 @@
 from authlib.integrations.starlette_client import OAuth
-from sqlalchemy.ext.asyncio import AsyncSession
 from config import get_yandex_secrets
 from api.utils.auth import create_token
 from db.repositories.user_repository import UserRepository
