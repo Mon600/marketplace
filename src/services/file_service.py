@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import aiofiles
 from fastapi import UploadFile
@@ -37,8 +38,9 @@ class FileService:
 
     @staticmethod
     async def delete_dir(announcement_id: int, user_id: int) -> None:
-        os.remove(f"../files/{user_id}/{announcement_id}")
-
+        dir  = f"../files/{user_id}/{announcement_id}"
+        if os.path.exists(dir):
+            shutil.rmtree(dir)
 
     async def add_files(self, files: list[UploadFile], announcement_id: int, user_id) -> None:
         try:
@@ -55,9 +57,8 @@ class FileService:
             print(e)
 
     async def delete_files(self, announcement_id: int, user_id) -> None:
-        try:
-            await self.delete_dir(announcement_id, user_id)
-        except:
-            return "No files"
+
+        await self.delete_dir(announcement_id, user_id)
+
 
 
