@@ -2,7 +2,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 
 from api.depends.service_depend import announcement_service, file_service
 from api.depends.user_depends import current_user_access
-from schemas.announcement_schemas import SAnnouncement, SAnnouncementGet
+from schemas.announcement_schemas import SAnnouncement, SAnnouncementGet, Pagination, PaginationDep, FiltersDep
 
 router = APIRouter(prefix="/announcements", tags=["Объявления"])
 
@@ -30,6 +30,25 @@ async def get_announcement(service: announcement_service,
     return result
 
 
+@router.get("/user/{user_id}")
+async def get_announcements(service: announcement_service, user_id: int) -> list[SAnnouncementGet]:
+    result = await service.get_user_announcements(user_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Announcements not found")
+    return result
+
+
+@router.get('/feed')
+async def get_feed(service: announcement_service,
+                   user: current_user_access,
+                   pagination: PaginationDep,
+                   filters: FiltersDep) -> list[SAnnouncementGet]:
+    result = await service.get_feed(int(user.sub), pagination, filters)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Announcements not found")
+    return result
+
+
 @router.put("/announcement/{announcement_id}")
 async def update_announcement(a_service: announcement_service,
                               f_service: file_service,
@@ -49,6 +68,7 @@ async def update_announcement(a_service: announcement_service,
             return {"ok": False, "detail": "Something went wrong."}
     except:
         raise HTTPException(status_code=400, detail='Incorrect file type.')
+
 
 @router.delete("/announcement/{announcement_id}")
 async def delete_announcemet(a_service: announcement_service,

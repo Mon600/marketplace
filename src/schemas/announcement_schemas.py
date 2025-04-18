@@ -1,7 +1,8 @@
 import json
-from typing import Optional, Any, List
+from typing import Optional, Any, List, Annotated
 
-from pydantic import BaseModel, field_validator, model_validator, Field
+from fastapi.params import Depends
+from pydantic import BaseModel, field_validator, model_validator, Field, ConfigDict
 
 from schemas.file_schemas import SFileGet
 from schemas.user_schemas import SUser
@@ -34,3 +35,24 @@ class SAnnouncementGet(SAnnouncement):
     id: int
     user_rel: Optional[SUser] = Field(None, description="Данные пользователя")
     file_rel: List[SFileGet] = Field(default_factory=list, description="Список файлов")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+
+class Filters(BaseModel):
+    category_id: Optional[int | None] = Field(None, description='Категория')
+    min_price: Optional[float | None] = Field(None,ge=1, le=100000000, description="Минимальная цена" )
+    max_price: Optional[float | None] = Field(None,ge=1, description="Максимальная цена")
+    geo: Optional[str | None] = Field(None, description='Город поиска')
+    type: Optional[str| None] = Field(None, description='Тип объявления')
+
+FiltersDep = Annotated[Filters, Depends()]
+
+class Pagination(BaseModel):
+    limit: int = Field(10, ge=0, le=100, description="Кол-во записей на странице")
+    offset: int = Field(0, ge=0, description='Начало пагинации')
+
+
+PaginationDep = Annotated[Pagination, Depends()]
+

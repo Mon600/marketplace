@@ -1,5 +1,5 @@
 from db.repositories.announcemets_repository import AnnouncementRepository
-from schemas.announcement_schemas import SAnnouncement, SAnnouncementGet
+from schemas.announcement_schemas import SAnnouncement, SAnnouncementGet, PaginationDep, Filters, FiltersDep
 
 
 class AnnouncementService:
@@ -29,6 +29,23 @@ class AnnouncementService:
             return None
         return result
 
+    async def get_user_announcements(self, user_id: int) -> list[SAnnouncementGet] | None:
+        result = await self.repository.get_by_user_id(user_id)
+        if result:
+            return result
+        return None
+
+
+    async def get_feed(self, user_id: int,
+                       pagination: PaginationDep,
+                       filters: FiltersDep) -> list[SAnnouncementGet] | None:
+        limit = pagination.limit
+        offset = pagination.offset
+        filters_dict = filters.model_dump()
+        result = await self.repository.get_feed(user_id, limit, offset, filters_dict)
+        if not result:
+            return None
+        return result
 
     async def update_announcement(self, announcement_id: int,
                                   announcement: SAnnouncement,

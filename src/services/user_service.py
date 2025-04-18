@@ -33,3 +33,7 @@ class UserService:
             return result
         else:
             return None
+
+    async def get_user_role(self, user_id: int):
+        user = await self.repository.check_rights(user_id)
+        return user

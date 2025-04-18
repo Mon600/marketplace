@@ -2,6 +2,8 @@ from typing import Optional
 
 from pydantic import BaseModel, field_validator
 
+from schemas.role_schemas import SRole
+
 
 class SChange(BaseModel):
     first_name: Optional[str] = ''
@@ -28,8 +30,10 @@ class SRegister(BaseModel):
     last_name: Optional[str]
     email: str
 
+
 class SUser(SRegister):
     phone: Optional[str]
+    roles_rel: Optional[SRole]
 
     class Config:
         from_attributes = True

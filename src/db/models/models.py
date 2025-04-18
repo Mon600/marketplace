@@ -25,6 +25,9 @@ class UserModel(Base):
     email: Mapped[str] = mapped_column(String(60))
     phone: Mapped[Optional[str]] = mapped_column(String(11))
     announcements_rel: Mapped[list["AnnouncementsModel"]]  = relationship(back_populates="user_rel")
+    role_id: Mapped[int] = mapped_column(ForeignKey('roles.id', ondelete='CASCADE'), default=1)
+    roles_rel: Mapped["RoleModel"] = relationship(back_populates="user_rel")
+
 
 class CategoriesModel(Base):
     __tablename__ = 'categories'
@@ -65,3 +68,12 @@ class FileModel(Base):
     type: Mapped[str] = mapped_column(String(30))
     url: Mapped[str]
     announcements_rel: Mapped["AnnouncementsModel"] = relationship(back_populates="file_rel")
+
+
+
+class RoleModel(Base):
+    __tablename__ = 'roles'
+
+    id: Mapped[pk]
+    role: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    user_rel: Mapped[list["UserModel"]] = relationship(back_populates="roles_rel")

@@ -24,9 +24,44 @@ class AnnouncementRepository:
                         )
                 )
         announcement = await self.session.execute(query)
-
         result = announcement.scalars().one_or_none()
         return result
+
+    async def get_by_user_id(self, user_id: int):
+        query = (select(AnnouncementsModel)
+                 .where(AnnouncementsModel.user_id == user_id)
+                 .options(joinedload(AnnouncementsModel.user_rel),
+                          selectinload(AnnouncementsModel.file_rel)
+                          )
+                 )
+        announcements = await self.session.execute(query)
+        result = announcements.scalars().all()
+        return result
+
+    async def get_feed(self, user_id: int, limit: int, offset: int,filters: dict):
+        query = (select(AnnouncementsModel)
+                 .where(AnnouncementsModel.user_id != user_id, AnnouncementsModel.status == True)
+                 .options(joinedload(AnnouncementsModel.user_rel),
+                          selectinload(AnnouncementsModel.file_rel)
+                          )
+                 .limit(limit)
+                 .offset(offset)
+                 )
+        if not filters["category_id"] is None:
+            query = query.where(AnnouncementsModel.category_id == filters["category_id"])
+        if not filters["min_price"] is None:
+            query = query.where(AnnouncementsModel.price >= filters["min_price"])
+        if not filters["max_price"] is None:
+            query = query.where(AnnouncementsModel.price <= filters["max_price"])
+        if not filters["geo"] is None:
+            query = query.where(AnnouncementsModel.geo == filters["geo"])
+        if not filters["type"] is None:
+            query = query.where(AnnouncementsModel.type == filters["type"])
+        announcements = await self.session.execute(query)
+        result = announcements.scalars().all()
+        return result
+
+
 
     async def update(self, announcement_id: int, user_id: int, announcement: dict):
         query = (update(AnnouncementsModel)

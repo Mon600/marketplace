@@ -1,13 +1,23 @@
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
-from db.models.models import UserModel
+from db.models.models import UserModel, RoleModel
 
 
 class UserRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
+
+    async def check_rights(self, user_id):
+        query = (
+            select(RoleModel)
+            .join(UserModel.roles_rel)
+            .where(UserModel.yandex_id == user_id)
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
 
     async def create_or_update(self, user):
         query = (
@@ -24,12 +34,12 @@ class UserRepository:
         return result.scalars().one()
 
     async def get_user_by_id(self, id: int):
-        query = select(UserModel).where(UserModel.yandex_id == id)
+        query = select(UserModel).where(UserModel.yandex_id == id).options(joinedload(UserModel.roles_rel))
         user = await self.session.execute(query)
-        return user.scalars().one_or_none()
+        result = user.scalars().one_or_none()
+        return result
 
     async def update(self, user_id: int, data: dict):
-        print(data)
         query = update(UserModel).where(UserModel.yandex_id == user_id).values(**data)
         await self.session.execute(query)
         await self.session.commit()
