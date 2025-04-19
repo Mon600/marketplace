@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timezone, timedelta
 
 from jose import jwt, JWTError
@@ -5,16 +6,27 @@ from jose import jwt, JWTError
 from config import get_auth_data
 
 
-def create_token(data: dict, expire_days = 0, expire_minutes = 15) -> str:
-    if expire_days == 0 and expire_days <= 0:
-        expire = datetime.now(timezone.utc) + timedelta(days=expire_minutes)
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(days=expire_days)
+def create_access_token(data: dict, ):
+    expire = datetime.now(timezone.utc) + timedelta(minutes=30)
     to_encode = data.copy()
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire,})
     auth_data = get_auth_data()
     encode_jwt = jwt.encode(to_encode, auth_data['secret_key'], algorithm=auth_data['algorithm'])
     return encode_jwt
+
+
+def create_refresh_token(data: dict) -> dict[str, str]:
+    expire = datetime.now(timezone.utc) + timedelta(days=30)
+    to_encode = data.copy()
+    token_id = str(uuid.uuid4())
+    to_encode.update({
+        "exp": expire,
+        "jti": token_id,
+        "type": "refresh"})
+    print(to_encode)
+    auth_data = get_auth_data()
+    encode_jwt = jwt.encode(to_encode, auth_data['secret_key'], algorithm=auth_data['algorithm'])
+    return {"token": encode_jwt, "token_id": token_id}
 
 
 def decode_token(token: str):

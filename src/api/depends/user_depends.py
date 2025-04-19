@@ -1,31 +1,46 @@
-from fastapi import Depends, Request
 
-from typing import Annotated
+from fastapi import Depends,  HTTPException
+
+from typing import Annotated, Any
 
 from api.Bearers.cookie_bearer import CookieBearer
+from api.depends.redis_depend import RedisDep
+from api.depends.repositories_depend import token_repository
 from api.utils.auth import decode_token
-from schemas.token_schemas import TokenPayload
+from schemas.token_schemas import RefreshTokenPayload, AccessTokenPayload
 
+cookie_security = CookieBearer()
 
-
-cookie_refresh_security = CookieBearer('users_refresh_token')
-cookie_access_security = CookieBearer('users_access_token')
 
 async def get_current_user_refresh(
+        redis: RedisDep,
+        repository: token_repository,
+        token: str = Depends(cookie_security)
 
-        token: str = Depends(cookie_refresh_security)
-) -> TokenPayload:
-    payload = decode_token(token)
-    return TokenPayload(**payload)
+) -> dict[str, Any]:
+    print(token)
+    payload = decode_token(token['refresh_token'])
+    status_redis = await redis.get(payload["jti"])
+    if status_redis is None:
+        status_db = await repository.add_token(payload["sub"], payload["jti"])
+        print("db", status_db)
+        if not status_db:
+            return {"payload": RefreshTokenPayload(**payload), "status": False}
+        await redis.set(payload["jti"], True, ex=86400 * 30)
+    elif not int(status_redis):
+        return {"payload": RefreshTokenPayload(**payload), "status": False}
+    return {"payload": RefreshTokenPayload(**payload), "status": True}
 
 
-current_user_refresh = Annotated[TokenPayload, Depends(get_current_user_refresh)]
+current_user_refresh = Annotated[RefreshTokenPayload, Depends(get_current_user_refresh)]
 
 async def get_current_user_access(
+    refresh_status: current_user_refresh,
+    token: str = Depends(cookie_security)
+) -> AccessTokenPayload:
+    if refresh_status["status"]:
+        payload_access = decode_token(token['access_token'])
+        return AccessTokenPayload(**payload_access)
+    raise HTTPException(status_code=401, detail="You've been banned.")
 
-    token: str = Depends(cookie_access_security)
-) -> TokenPayload:
-    payload = decode_token(token)
-    return TokenPayload(**payload)
-
-current_user_access = Annotated[TokenPayload, Depends(get_current_user_access)]
+current_user_access = Annotated[AccessTokenPayload, Depends(get_current_user_access)]

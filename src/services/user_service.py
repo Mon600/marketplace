@@ -37,3 +37,6 @@ class UserService:
     async def get_user_role(self, user_id: int):
         user = await self.repository.check_rights(user_id)
         return user
+
+    async def ban(self, user_id):
+        result = await self.repository.ban_user()

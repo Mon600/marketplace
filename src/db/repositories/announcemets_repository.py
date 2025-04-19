@@ -2,7 +2,8 @@ from sqlalchemy import update, select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, lazyload, selectinload
 
-from db.models.models import AnnouncementsModel
+from db.models.models import AnnouncementsModel, UserModel
+
 
 class AnnouncementRepository:
     def __init__(self, session: AsyncSession):
@@ -30,7 +31,7 @@ class AnnouncementRepository:
     async def get_by_user_id(self, user_id: int):
         query = (select(AnnouncementsModel)
                  .where(AnnouncementsModel.user_id == user_id)
-                 .options(joinedload(AnnouncementsModel.user_rel),
+                 .options(joinedload(AnnouncementsModel.user_rel).joinedload(UserModel.roles_rel),
                           selectinload(AnnouncementsModel.file_rel)
                           )
                  )
@@ -38,9 +39,9 @@ class AnnouncementRepository:
         result = announcements.scalars().all()
         return result
 
-    async def get_feed(self, user_id: int, limit: int, offset: int,filters: dict):
+    async def get_feed(self, limit: int, offset: int,filters: dict):
         query = (select(AnnouncementsModel)
-                 .where(AnnouncementsModel.user_id != user_id, AnnouncementsModel.status == True)
+                 .where(AnnouncementsModel.status == True)
                  .options(joinedload(AnnouncementsModel.user_rel),
                           selectinload(AnnouncementsModel.file_rel)
                           )

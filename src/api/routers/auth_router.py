@@ -22,8 +22,8 @@ async def yandex_auth(request: Request, service: auth_service):
         user = await service.oauth.yandex.get('https://login.yandex.ru/info?format=json', token=token)
         user_json = user.json()
         tokens = await service.register_or_update(user_json)
-        if not user:
-            raise HTTPException(status_code=400, detail="Не удалось получить данные пользователя")
+        if not tokens:
+            raise HTTPException(status_code=401, detail="Your account is banned.")
         response = RedirectResponse(url='/docs', status_code=303)
         response.set_cookie(key='users_refresh_token',
                             value=tokens['refresh_token'],
@@ -44,8 +44,13 @@ async def yandex_auth(request: Request, service: auth_service):
 
 @router.get("/refresh")
 async def refresh(response: Response, user: current_user_refresh, service: auth_service):
+    if not user['status']:
+        raise HTTPException(status_code=401, detail="Your account is banned.")
     id = int(user.sub)
-    acces_token = await service.refresh(id)
+    token_id = user.jti
+    acces_token = await service.refresh(id, token_id)
+    if not acces_token:
+        raise HTTPException(status_code=401, detail="You've got banned")
     response.set_cookie(key='users_access_token',
                         value=acces_token,
                         httponly=True,
@@ -55,9 +60,9 @@ async def refresh(response: Response, user: current_user_refresh, service: auth_
     return {"ok": True, "detail": acces_token}
 
 
-@router.get("/logout")
-async def logout(response: Response):
-
+@router.post("/logout")
+async def logout(response: Response, service: auth_service, user: current_user_refresh):
+    await service.logout(user['payload'].jti)
     response.delete_cookie(key='users_access_token',
                            httponly=True,
                            samesite='lax',

@@ -9,10 +9,13 @@ class CookieBearer:
 
 
     async def __call__(self, request: Request):
-        token = request.cookies.get(self.token_type)
-        if not token:
+        refesh_token = request.cookies.get('users_refresh_token')
+        access_token = request.cookies.get('users_access_token')
+        if not refesh_token:
             raise HTTPException(
                 status_code=401,
                 detail="Not authenticated",
             )
-        return token
+        if not access_token:
+            return {'refresh_token': refesh_token}
+        return {"access_token": access_token, "refresh_token": refesh_token}

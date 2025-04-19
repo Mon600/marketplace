@@ -2,12 +2,14 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 
 from api.depends.service_depend import announcement_service, file_service
 from api.depends.user_depends import current_user_access
+
 from schemas.announcement_schemas import SAnnouncement, SAnnouncementGet, Pagination, PaginationDep, FiltersDep
 
 router = APIRouter(prefix="/announcements", tags=["Объявления"])
 
 
 @router.post("/new-announcement")
+
 async def new_announcement(
                            a_service: announcement_service,
                            f_service: file_service,
@@ -40,10 +42,9 @@ async def get_announcements(service: announcement_service, user_id: int) -> list
 
 @router.get('/feed')
 async def get_feed(service: announcement_service,
-                   user: current_user_access,
                    pagination: PaginationDep,
                    filters: FiltersDep) -> list[SAnnouncementGet]:
-    result = await service.get_feed(int(user.sub), pagination, filters)
+    result = await service.get_feed(pagination, filters)
     if result is None:
         raise HTTPException(status_code=404, detail="Announcements not found")
     return result

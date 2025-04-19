@@ -5,6 +5,7 @@ from api.depends.session_depend import SessionDep
 from db.repositories.announcemets_repository import AnnouncementRepository
 from db.repositories.category_repository import CategoryRepository
 from db.repositories.file_repository import FileRepository
+from db.repositories.token_repository import TokenRepository
 
 from db.repositories.user_repository import UserRepository
 
@@ -31,3 +32,9 @@ def get_category_repository(session: SessionDep) -> CategoryRepository:
     return CategoryRepository(session)
 
 category_repository = Annotated[CategoryRepository, Depends(get_category_repository)]
+
+
+def get_token_repository(session: SessionDep) -> TokenRepository:
+    return TokenRepository(session)
+
+token_repository = Annotated[TokenRepository, Depends(get_token_repository)]

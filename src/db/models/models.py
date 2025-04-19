@@ -1,5 +1,8 @@
 import enum
-from sqlalchemy import Enum as SQLEnum
+import uuid
+from datetime import datetime
+
+from sqlalchemy import Enum as SQLEnum, Boolean, text
 from typing import Optional, Annotated
 
 from sqlalchemy import String, ForeignKey
@@ -10,6 +13,7 @@ from config import Base
 
 
 pk = Annotated[int, mapped_column(primary_key=True, autoincrement=True)]
+created_at = Annotated[datetime, mapped_column(server_default=text("TIMEZONE( 'utc', now())"))]
 
 class AnnouncementType(enum.Enum):
     sale = "sale"
@@ -24,9 +28,11 @@ class UserModel(Base):
     last_name: Mapped[Optional[str]] = mapped_column(String(50))
     email: Mapped[str] = mapped_column(String(60))
     phone: Mapped[Optional[str]] = mapped_column(String(11))
-    announcements_rel: Mapped[list["AnnouncementsModel"]]  = relationship(back_populates="user_rel")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     role_id: Mapped[int] = mapped_column(ForeignKey('roles.id', ondelete='CASCADE'), default=1)
+    announcements_rel: Mapped[list["AnnouncementsModel"]]  = relationship(back_populates="user_rel")
     roles_rel: Mapped["RoleModel"] = relationship(back_populates="user_rel")
+    tokens_rel: Mapped[list["TokenModel"]] = relationship(back_populates="user_rel")
 
 
 class CategoriesModel(Base):
@@ -77,3 +83,14 @@ class RoleModel(Base):
     id: Mapped[pk]
     role: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
     user_rel: Mapped[list["UserModel"]] = relationship(back_populates="roles_rel")
+
+
+class TokenModel(Base):
+    __tablename__ = 'tokens'
+
+    id: Mapped[pk]
+    token_id: Mapped[str] = mapped_column(unique=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.yandex_id', ondelete='CASCADE'))
+    user_rel: Mapped['UserModel'] = relationship(back_populates="tokens_rel")
+    is_banned: Mapped[bool] = mapped_column(default=False)
+    issued_at: Mapped[created_at]

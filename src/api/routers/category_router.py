@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.sql.functions import current_user
+
 
 from api.depends.service_depend import category_service, user_service
 from api.depends.user_depends import current_user_access
@@ -12,6 +12,7 @@ router = APIRouter(tags=['Категории'], prefix='/category')
 
 
 @router.post('/')
+
 @is_admin()
 async def create_category(name: str,
                           u_service: user_service,
@@ -28,6 +29,7 @@ async def get_all_categories(service: category_service) -> list[SCategory]:
     return res
 
 @router.delete('/{id}')
+
 @is_admin()
 async def delete_category(id: int,
                           user: current_user_access,
