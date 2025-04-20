@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from db.models.models import UserModel, RoleModel, AnnouncementsModel, TokenModel
+from schemas.user_schemas import SUser
 
 
 class UserRepository:
@@ -34,7 +35,7 @@ class UserRepository:
         await self.session.commit()
         return result
 
-    async def get_user_by_id(self, id: int):
+    async def get_user_by_id(self, id: int) -> SUser | None:
         query = select(UserModel).where(UserModel.yandex_id == id).options(joinedload(UserModel.roles_rel))
         user = await self.session.execute(query)
         result = user.scalars().one_or_none()
@@ -46,15 +47,3 @@ class UserRepository:
         await self.session.commit()
         return True
 
-    async def ban(self, user_id: int):
-        query_u = (update(UserModel)
-                 .where(UserModel.yandex_id == user_id and UserModel.role_id != 2)
-                 .values(is_active=False))
-        query_a = update(AnnouncementsModel).where(AnnouncementsModel.user_id == user_id).values(status=False)
-        query_t = update(TokenModel).where(UserModel.yandex_id == user_id).values(is_banned=True).returning(TokenModel.token_id)
-        await self.session.execute(query_u)
-        await self.session.execute(query_a)
-        tokens = await self.session.execute(query_t)
-        result = tokens.scalars().all()
-        await self.session.commit()
-        return result

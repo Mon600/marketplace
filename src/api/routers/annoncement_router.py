@@ -8,8 +8,7 @@ from schemas.announcement_schemas import SAnnouncement, SAnnouncementGet, Pagina
 router = APIRouter(prefix="/announcements", tags=["Объявления"])
 
 
-@router.post("/new-announcement")
-
+@router.post("/new-announcement", summary='Создать объявление➕')
 async def new_announcement(
                            a_service: announcement_service,
                            f_service: file_service,
@@ -23,7 +22,7 @@ async def new_announcement(
 
 
 
-@router.get("/announcement/{announcement_id}")
+@router.get("/announcement/{announcement_id}", summary="Получить объявление по ID🆔")
 async def get_announcement(service: announcement_service,
                            announcement_id: int) -> SAnnouncementGet:
     result = await service.get_announcement(announcement_id)
@@ -32,7 +31,7 @@ async def get_announcement(service: announcement_service,
     return result
 
 
-@router.get("/user/{user_id}")
+@router.get("/user/{user_id}", summary="Получить объявления от конкртеного пользователя👨🏻‍💼")
 async def get_announcements(service: announcement_service, user_id: int) -> list[SAnnouncementGet]:
     result = await service.get_user_announcements(user_id)
     if result is None:
@@ -40,7 +39,7 @@ async def get_announcements(service: announcement_service, user_id: int) -> list
     return result
 
 
-@router.get('/feed')
+@router.get('/feed', summary="Получить ленту объявлений📲")
 async def get_feed(service: announcement_service,
                    pagination: PaginationDep,
                    filters: FiltersDep) -> list[SAnnouncementGet]:
@@ -50,7 +49,7 @@ async def get_feed(service: announcement_service,
     return result
 
 
-@router.put("/announcement/{announcement_id}")
+@router.put("/announcement/{announcement_id}", summary="Редактировать объявление⌨️")
 async def update_announcement(a_service: announcement_service,
                               f_service: file_service,
                               announcement_id: int,
@@ -71,7 +70,7 @@ async def update_announcement(a_service: announcement_service,
         raise HTTPException(status_code=400, detail='Incorrect file type.')
 
 
-@router.delete("/announcement/{announcement_id}")
+@router.delete("/announcement/{announcement_id}", summary='Удалить объявление⛔️')
 async def delete_announcemet(a_service: announcement_service,
                              f_service: file_service,
                              announcement_id: int,

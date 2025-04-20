@@ -2,6 +2,7 @@ from fastapi import Depends
 from typing import Annotated
 
 from api.depends.session_depend import SessionDep
+from db.repositories.admin_repository import AdminRepository
 from db.repositories.announcemets_repository import AnnouncementRepository
 from db.repositories.category_repository import CategoryRepository
 from db.repositories.file_repository import FileRepository
@@ -38,3 +39,9 @@ def get_token_repository(session: SessionDep) -> TokenRepository:
     return TokenRepository(session)
 
 token_repository = Annotated[TokenRepository, Depends(get_token_repository)]
+
+
+def get_admin_repository(session: SessionDep) -> AdminRepository:
+    return AdminRepository(session)
+
+admin_repository = Annotated[AdminRepository, Depends(get_admin_repository)]

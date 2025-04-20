@@ -9,13 +9,13 @@ from api.depends.user_depends import current_user_refresh
 router = APIRouter(prefix="/auth", tags=["Авторизация"])
 
 
-@router.get("/yandex", summary="Авторизация через Яндекс")
+@router.get("/yandex", summary="Авторизация через Яндекс🆔")
 async def yandex_login(request: Request, service: auth_service):
     redirect_uri = "http://127.0.0.1:8000/auth/yandex/auth"
     return await service.oauth.yandex.authorize_redirect(request, redirect_uri)
 
 
-@router.get("/yandex/auth")
+@router.get("/yandex/auth", summary="Ответ от Яндекса✉️")
 async def yandex_auth(request: Request, service: auth_service):
     try:
         token = await service.oauth.yandex.authorize_access_token(request)
@@ -42,13 +42,12 @@ async def yandex_auth(request: Request, service: auth_service):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/refresh")
+@router.get("/refresh", summary='Обновление токена♻️')
 async def refresh(response: Response, user: current_user_refresh, service: auth_service):
     if not user['status']:
         raise HTTPException(status_code=401, detail="Your account is banned.")
-    id = int(user.sub)
-    token_id = user.jti
-    acces_token = await service.refresh(id, token_id)
+    id = int(user['payload'].sub)
+    acces_token = await service.refresh(id)
     if not acces_token:
         raise HTTPException(status_code=401, detail="You've got banned")
     response.set_cookie(key='users_access_token',
@@ -60,7 +59,7 @@ async def refresh(response: Response, user: current_user_refresh, service: auth_
     return {"ok": True, "detail": acces_token}
 
 
-@router.post("/logout")
+@router.post("/logout", summary='Выход➡️🚪')
 async def logout(response: Response, service: auth_service, user: current_user_refresh):
     await service.logout(user['payload'].jti)
     response.delete_cookie(key='users_access_token',

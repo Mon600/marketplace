@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, lazyload, selectinload
 
 from db.models.models import AnnouncementsModel, UserModel
+from schemas.announcement_schemas import SAnnouncementGet
 
 
 class AnnouncementRepository:
@@ -16,11 +17,11 @@ class AnnouncementRepository:
         return new_announcement.id
 
 
-    async def get_by_id(self, announcement_id: int):
+    async def get_by_id(self, announcement_id: int) -> SAnnouncementGet:
         query = (select(AnnouncementsModel)
                 .where(AnnouncementsModel.id == announcement_id)
                 .options(
-                         joinedload(AnnouncementsModel.user_rel),
+                         joinedload(AnnouncementsModel.user_rel).joinedload(UserModel.roles_rel),
                                  selectinload(AnnouncementsModel.file_rel),
                         )
                 )

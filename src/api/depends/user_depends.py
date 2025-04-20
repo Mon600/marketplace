@@ -18,12 +18,10 @@ async def get_current_user_refresh(
         token: str = Depends(cookie_security)
 
 ) -> dict[str, Any]:
-    print(token)
     payload = decode_token(token['refresh_token'])
     status_redis = await redis.get(payload["jti"])
     if status_redis is None:
         status_db = await repository.add_token(payload["sub"], payload["jti"])
-        print("db", status_db)
         if not status_db:
             return {"payload": RefreshTokenPayload(**payload), "status": False}
         await redis.set(payload["jti"], True, ex=86400 * 30)
@@ -39,8 +37,11 @@ async def get_current_user_access(
     token: str = Depends(cookie_security)
 ) -> AccessTokenPayload:
     if refresh_status["status"]:
-        payload_access = decode_token(token['access_token'])
-        return AccessTokenPayload(**payload_access)
+        try:
+            payload_access = decode_token(token['access_token'])
+            return AccessTokenPayload(**payload_access)
+        except KeyError:
+            raise HTTPException(status_code=403, detail="access token is invalid")
     raise HTTPException(status_code=401, detail="You've been banned.")
 
 current_user_access = Annotated[AccessTokenPayload, Depends(get_current_user_access)]

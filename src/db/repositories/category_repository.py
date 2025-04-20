@@ -3,6 +3,7 @@ from sqlalchemy import select, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models.models import UserModel, CategoriesModel
+from schemas.category_schemas import SCategory
 
 
 class CategoryRepository:
@@ -16,7 +17,7 @@ class CategoryRepository:
         await self.session.commit()
         return True
 
-    async def get_all(self):
+    async def get_all(self) -> list[SCategory]:
         query = select(CategoriesModel)
         categories = await self.session.execute(query)
         result = categories.scalars().all()

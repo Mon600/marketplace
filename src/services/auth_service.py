@@ -37,7 +37,7 @@ class AuthService:
             email=user['default_email'],
         ).model_dump()
         user = await self.user_repository.create_or_update(user_data)
-        id = user[0]
+        id = int(user[0])
         is_active = user[1]
         if is_active:
             access_token = create_access_token({'sub': f'{id}'})
@@ -45,19 +45,12 @@ class AuthService:
             token_id = refresh_token_info['token_id']
             refresh_token = refresh_token_info['token']
             await self.token_repository.add_token(id, token_id)
-            await self.redis.set(token_id, str(is_active), ex=86400 * 30)
+            await self.redis.set(token_id, int(is_active), ex=86400 * 30)
             return {"access_token": access_token, "refresh_token": refresh_token}
         return False
 
-
-
-    async def refresh(self, user_id: int, token_id: str):
-        # token_status = await self.redis.get(token_id)
-        # if token_status is None:
-        #     status = await self.token_repository.add_token(user_id, token_id)
-        #     if not status:
-        #         return False
-        # elif not token_status:
+    @staticmethod
+    async def refresh(user_id: int):
         access_token = create_access_token({'sub': f'{user_id}'})
         return access_token
 
