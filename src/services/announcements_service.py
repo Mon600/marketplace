@@ -2,7 +2,7 @@ import json
 
 from redis.asyncio import Redis
 
-from db.repositories.announcemets_repository import AnnouncementRepository
+from db.repositories.announcements_repository import AnnouncementRepository
 from schemas.announcement_schemas import SAnnouncement, SAnnouncementGet, PaginationDep, Filters, FiltersDep
 
 

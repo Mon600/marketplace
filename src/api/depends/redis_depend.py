@@ -10,6 +10,6 @@ async def get_redis():
     try:
         yield redis
     finally:
-        await redis.close()
+        await redis.aclose()
 
 RedisDep = Annotated[Redis, Depends(get_redis)]

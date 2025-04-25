@@ -47,7 +47,7 @@ class FileService:
              files = await self.files_to_dirs(user_id, announcement_id, files)
              await self.repository.add_file(files)
         except Exception as e:
-            print(e)
+            raise e
 
     async def update_files(self, dirs: list[UploadFile], announcement_id: int, user_id) -> None:
         try:

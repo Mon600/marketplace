@@ -1,7 +1,6 @@
 from authlib.integrations.starlette_client import OAuth
 from config import get_yandex_secrets
 from api.utils.auth import create_refresh_token, create_access_token
-from db.repositories import token_repository
 from db.repositories.token_repository import TokenRepository
 from db.repositories.user_repository import UserRepository
 from schemas.user_schemas import SRegister

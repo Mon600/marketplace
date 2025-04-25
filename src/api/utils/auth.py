@@ -23,7 +23,6 @@ def create_refresh_token(data: dict) -> dict[str, str]:
         "exp": expire,
         "jti": token_id,
         "type": "refresh"})
-    print(to_encode)
     auth_data = get_auth_data()
     encode_jwt = jwt.encode(to_encode, auth_data['secret_key'], algorithm=auth_data['algorithm'])
     return {"token": encode_jwt, "token_id": token_id}

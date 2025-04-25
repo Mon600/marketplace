@@ -24,3 +24,10 @@ class AdminService:
 
     async def delete_announcement(self, announcement_id: int) -> bool:
         await self.repository.delete_announcement(announcement_id)
+        return True
+
+    async def give_role(self, user_id: int, role_id: int):
+        await self.repository.give_role(user_id, role_id)
+        await self.redis.delete(f'role_{user_id}')
+        return True
+

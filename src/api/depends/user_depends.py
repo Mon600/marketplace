@@ -6,6 +6,7 @@ from typing import Annotated, Any
 from api.Bearers.cookie_bearer import CookieBearer
 from api.depends.redis_depend import RedisDep
 from api.depends.repositories_depend import token_repository
+from api.depends.service_depend import user_service
 from api.utils.auth import decode_token
 from schemas.token_schemas import RefreshTokenPayload, AccessTokenPayload
 
@@ -16,15 +17,14 @@ async def get_current_user_refresh(
         redis: RedisDep,
         repository: token_repository,
         token: str = Depends(cookie_security)
-
 ) -> dict[str, Any]:
     payload = decode_token(token['refresh_token'])
     status_redis = await redis.get(payload["jti"])
     if status_redis is None:
-        status_db = await repository.add_token(payload["sub"], payload["jti"])
-        if not status_db:
+        status_db = await repository.add_token(int(payload["sub"]), payload["jti"])
+        if status_db:
             return {"payload": RefreshTokenPayload(**payload), "status": False}
-        await redis.set(payload["jti"], True, ex=86400 * 30)
+        await redis.set(payload["jti"], int(not status_db), ex=86400 * 30)
     elif not int(status_redis):
         return {"payload": RefreshTokenPayload(**payload), "status": False}
     return {"payload": RefreshTokenPayload(**payload), "status": True}
@@ -45,3 +45,16 @@ async def get_current_user_access(
     raise HTTPException(status_code=401, detail="You've been banned.")
 
 current_user_access = Annotated[AccessTokenPayload, Depends(get_current_user_access)]
+
+async def get_status(user: current_user_access, service: user_service, redis: RedisDep):
+    if await redis.get(f"role_{user.sub}") == "admin":
+        return True
+    role = await service.get_user_role(int(user.sub))
+    await redis.set(f"role_{user.sub}", role.role, ex=86400)
+    if role.role != 'admin':
+        raise HTTPException(
+            detail="Access denied",
+            status_code=403)
+    return True
+
+StatusDep = Annotated[bool, Depends(get_status)]

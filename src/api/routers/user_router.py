@@ -6,7 +6,7 @@ from api.depends.service_depend import user_service
 from schemas.user_schemas import SUser, SChange
 
 
-router = APIRouter(prefix="/users", tags=["Пользователи"])
+router = APIRouter(prefix="/users", tags=["Пользователи🚹"])
 
 @router.get("/", summary="Получить мои данныеℹ️")
 async def get_user_info(user: current_user_access, service: user_service) -> SUser | None:

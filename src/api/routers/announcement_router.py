@@ -1,3 +1,5 @@
+from fastapi import Request
+
 from fastapi import APIRouter, UploadFile, File, HTTPException
 
 from api.depends.service_depend import announcement_service, file_service
@@ -5,7 +7,7 @@ from api.depends.user_depends import current_user_access
 
 from schemas.announcement_schemas import SAnnouncement, SAnnouncementGet, Pagination, PaginationDep, FiltersDep
 
-router = APIRouter(prefix="/announcements", tags=["Объявления"])
+router = APIRouter(prefix="/announcements", tags=["Объявления📋"])
 
 
 @router.post("/new-announcement", summary='Создать объявление➕')
@@ -15,9 +17,13 @@ async def new_announcement(
                            user: current_user_access,
                            announcement: SAnnouncement,
                            file: list[UploadFile] = File(None,min_length=0, max_length=10)):
+
     announcement_id = await a_service.new_announcement(announcement, user_id=int(user.sub))
     if not file is None:
-        await f_service.add_files(file, announcement_id, user_id=int(user.sub))
+        try:
+            await f_service.add_files(file, announcement_id, user_id=int(user.sub))
+        except:
+            raise HTTPException(status_code=400, detail="Incorrect file type")
     return {"ok": True, "detail": "Announcement successfully created"}
 
 

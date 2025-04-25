@@ -4,7 +4,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from api.routers.auth_router import router as auth
 from api.routers.user_router import router as user
-from api.routers.annoncement_router import router as announcement
+from api.routers.announcement_router import router as announcement
 from api.routers.category_router import router as category
 from api.routers.admin_router import router as admin
 app = FastAPI()

@@ -3,7 +3,7 @@ from typing import Annotated
 
 from api.depends.session_depend import SessionDep
 from db.repositories.admin_repository import AdminRepository
-from db.repositories.announcemets_repository import AnnouncementRepository
+from db.repositories.announcements_repository import AnnouncementRepository
 from db.repositories.category_repository import CategoryRepository
 from db.repositories.file_repository import FileRepository
 from db.repositories.token_repository import TokenRepository

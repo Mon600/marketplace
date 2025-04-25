@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 from authlib.integrations.base_client import OAuthError
 from fastapi import APIRouter, HTTPException
 from starlette.requests import Request
@@ -6,7 +8,7 @@ from starlette.responses import RedirectResponse, Response
 from api.depends.service_depend import auth_service
 from api.depends.user_depends import current_user_refresh
 
-router = APIRouter(prefix="/auth", tags=["Авторизация"])
+router = APIRouter(prefix="/auth", tags=["Авторизация🔐"])
 
 
 @router.get("/yandex", summary="Авторизация через Яндекс🆔")

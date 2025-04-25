@@ -13,33 +13,37 @@ from services.file_service import FileService
 from services.user_service import UserService
 
 
-def get_auth_service(u_repository: user_repository, t_repository: token_repository, redis: RedisDep) -> AuthService:
+async def get_auth_service(u_repository: user_repository, t_repository: token_repository, redis: RedisDep) -> AuthService:
     return AuthService(u_repository, t_repository, redis)
 
 auth_service = Annotated[AuthService, Depends(get_auth_service)]
 
-def get_user_service(repository: user_repository, redis: RedisDep) -> UserService:
+
+async def get_user_service(repository: user_repository, redis: RedisDep) -> UserService:
     return UserService(repository, redis)
 
 user_service = Annotated[UserService, Depends(get_user_service)]
 
-def get_announcement_service(repository: announcement_repository, redis: RedisDep) -> AnnouncementService:
+
+async def get_announcement_service(repository: announcement_repository, redis: RedisDep) -> AnnouncementService:
     return AnnouncementService(repository, redis)
 
 announcement_service = Annotated[AnnouncementService, Depends(get_announcement_service)]
 
 
-def get_file_service(repository: file_repository) -> FileService:
+async def get_file_service(repository: file_repository) -> FileService:
     return FileService(repository)
 
 file_service = Annotated[FileService, Depends(get_file_service)]
 
-def get_category_service(repository: category_repository, redis: RedisDep) -> CategoryService:
+
+async def get_category_service(repository: category_repository, redis: RedisDep) -> CategoryService:
     return CategoryService(repository, redis)
 
 category_service = Annotated[CategoryService, Depends(get_category_service)]
 
-def get_admin_service(rep: admin_repository,
+
+async def get_admin_service(rep: admin_repository,
                       redis: RedisDep) -> AdminService:
     return AdminService(rep, redis)
 

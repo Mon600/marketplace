@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, ConfigDict
 
 from schemas.role_schemas import SRole
 
@@ -35,7 +35,6 @@ class SUser(SRegister):
     phone: Optional[str]
     roles_rel: Optional[SRole]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
