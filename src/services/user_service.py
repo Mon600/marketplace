@@ -6,7 +6,6 @@ from db.repositories.user_repository import UserRepository
 from schemas.user_schemas import SUser, SChange
 
 
-
 class UserService:
     def __init__(self, repository: UserRepository, redis: Redis):
         self.repository = repository
@@ -23,7 +22,7 @@ class UserService:
         return data
 
 
-    async def get_user_info(self, user_id: str) -> SUser | None:
+    async def get_user_info(self, user_id: str):
         user_cache = await self.redis.get(user_id)
         if user_cache:
             return json.loads(user_cache)
@@ -31,9 +30,9 @@ class UserService:
         if not user:
             return None
         else:
-            result = SUser.model_validate(user)
-            await self.redis.set(user_id, json.dumps(result.model_dump()), ex=86400)
-            return result
+            # result = SUserByID.model_validate(user)
+            # await self.redis.set(user_id, json.dumps(result.model_dump()), ex=86400)
+            return user
 
     async def update_user_info(self, user_id: str, new_data: SChange):
         data = new_data.model_dump()

@@ -1,11 +1,12 @@
-from fastapi import Request
+
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
+from typing import Any
 
 from api.depends.service_depend import announcement_service, file_service
 from api.depends.user_depends import current_user_access
 
-from schemas.announcement_schemas import SAnnouncement, SAnnouncementGet, Pagination, PaginationDep, FiltersDep
+from schemas.announcement_schemas import SAnnouncement, SAnnouncementGet, PaginationDep, FiltersDep
 
 router = APIRouter(prefix="/announcements", tags=["Объявления📋"])
 

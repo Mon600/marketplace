@@ -32,9 +32,10 @@ class AnnouncementService:
         if announcement_cache:= await self.redis.get(str(announcement_id)):
             return json.loads(announcement_cache)
         result = await self.repository.get_by_id(announcement_id)
-        await self.redis.set(str(announcement_id), json.dumps(result.model_dump()), ex=86400)
         if result is None:
             return None
+        announcement = SAnnouncementGet.model_validate(result)
+        await self.redis.set(str(announcement_id), json.dumps(announcement.model_dump()), ex=86400)
         return result
 
     async def get_user_announcements(self, user_id: int) -> list[SAnnouncementGet] | None:

@@ -17,7 +17,7 @@ class AnnouncementRepository:
         return new_announcement.id
 
 
-    async def get_by_id(self, announcement_id: int) -> SAnnouncementGet:
+    async def get_by_id(self, announcement_id: int):
         query = (select(AnnouncementsModel)
                 .where(AnnouncementsModel.id == announcement_id)
                 .options(
@@ -43,7 +43,7 @@ class AnnouncementRepository:
     async def get_feed(self, limit: int, offset: int,filters: dict):
         query = (select(AnnouncementsModel)
                  .where(AnnouncementsModel.status == True)
-                 .options(joinedload(AnnouncementsModel.user_rel),
+                 .options(joinedload(AnnouncementsModel.user_rel).joinedload(UserModel.roles_rel),
                           selectinload(AnnouncementsModel.file_rel)
                           )
                  .limit(limit)

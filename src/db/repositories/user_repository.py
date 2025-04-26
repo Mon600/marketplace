@@ -1,7 +1,7 @@
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 
 from db.models.models import UserModel, RoleModel, AnnouncementsModel, TokenModel
 from schemas.user_schemas import SUser
@@ -35,8 +35,27 @@ class UserRepository:
         await self.session.commit()
         return result
 
-    async def get_user_by_id(self, id: int) -> SUser | None:
-        query = select(UserModel).where(UserModel.yandex_id == id).options(joinedload(UserModel.roles_rel))
+    async def get_user_by_id(self, id: int):
+        stmt_announcements = (
+            select(AnnouncementsModel.id)
+            .where(AnnouncementsModel.user_id == id)
+            .order_by(AnnouncementsModel.id.desc())  # или другой сортировки
+            .limit(10)
+        )
+
+        query = (
+            select(UserModel)
+            .where(UserModel.yandex_id == id)
+            .options(
+                joinedload(UserModel.roles_rel),
+                selectinload(
+                    UserModel.announcements_rel.and_(
+                        AnnouncementsModel.id.in_(stmt_announcements)
+                    )
+                ),
+            )
+        )
+
         user = await self.session.execute(query)
         result = user.scalars().one_or_none()
         return result

@@ -1,4 +1,5 @@
-from typing import Optional
+
+from typing import Optional, List
 
 from pydantic import BaseModel, field_validator, ConfigDict
 
@@ -36,5 +37,9 @@ class SUser(SRegister):
     roles_rel: Optional[SRole]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# class SUserByID(SUser):
+#     announcements_rel: Optional[List[SAnnouncementGet]]
 
 
