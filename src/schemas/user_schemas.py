@@ -39,7 +39,6 @@ class SUser(SRegister):
     model_config = ConfigDict(from_attributes=True)
 
 
-# class SUserByID(SUser):
-#     announcements_rel: Optional[List[SAnnouncementGet]]
+
 
 

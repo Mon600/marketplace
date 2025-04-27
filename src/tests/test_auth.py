@@ -183,13 +183,8 @@ async def test_refresh_is_banned_in_db(async_client: AsyncClient, redis_client: 
     assert len(response.cookies) == 0
 
 @pytest.mark.asyncio
-async def test_logout(async_client: AsyncClient, redis_client: Redis, test_user: UserModel):
-    user_id = test_user.yandex_id
-    refresh_token_data = {'sub': str(user_id), 'type': 'refresh'}
-    refresh_token_info = create_refresh_token(refresh_token_data)
-    refresh_token = refresh_token_info['token']
-    cookie_header = f"users_refresh_token={refresh_token}"
-    response = await async_client.post("/auth/logout", headers={"Cookie": cookie_header})
+async def test_logout(client_with_cookies_user: AsyncClient):
+    response = await client_with_cookies_user.post("/auth/logout")
     assert response.json()['ok']
     assert response.json()['detail'] == 'success logout'
     assert response.status_code == 200

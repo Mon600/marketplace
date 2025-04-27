@@ -2,13 +2,14 @@ from fastapi import APIRouter, Depends
 
 from api.depends.user_depends import current_user_access
 from api.depends.service_depend import user_service
+from schemas.dificult_user_schema import SUserByID
 
 from schemas.user_schemas import SUser, SChange
 
 router = APIRouter(prefix="/users", tags=["Пользователи🚹"])
 
 @router.get("/", summary="Получить мои данныеℹ️")
-async def get_user_info(user: current_user_access, service: user_service) -> SUser | None:
+async def get_user_info(user: current_user_access, service: user_service) -> SUserByID | None:
     result = await service.get_user_info(user.sub)
     return result
 

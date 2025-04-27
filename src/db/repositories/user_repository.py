@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
 from db.models.models import UserModel, RoleModel, AnnouncementsModel, TokenModel
+from schemas.dificult_user_schema import SUserByID
 from schemas.user_schemas import SUser
 
 
@@ -35,11 +36,11 @@ class UserRepository:
         await self.session.commit()
         return result
 
-    async def get_user_by_id(self, id: int):
+    async def get_user_by_id(self, id: int) -> SUserByID | None:
         stmt_announcements = (
             select(AnnouncementsModel.id)
             .where(AnnouncementsModel.user_id == id)
-            .order_by(AnnouncementsModel.id.desc())  # или другой сортировки
+            .order_by(AnnouncementsModel.id.desc())
             .limit(10)
         )
 
@@ -52,7 +53,7 @@ class UserRepository:
                     UserModel.announcements_rel.and_(
                         AnnouncementsModel.id.in_(stmt_announcements)
                     )
-                ),
+                ).options(joinedload(AnnouncementsModel.file_rel)),
             )
         )
 

@@ -14,15 +14,8 @@ from schemas.announcement_schemas import SAnnouncementGet
 
 
 @pytest.mark.asyncio
-async def test_announcement_wo_file(async_client: AsyncClient, test_user: UserModel, redis_client: Redis):
-    user_id = test_user.yandex_id
-    refresh_token_data = {'sub': str(user_id), 'type': 'refresh'}
-    refresh_token_info = create_refresh_token(refresh_token_data)
-    refresh_token = refresh_token_info['token']
-    actual_jti = refresh_token_info['token_id']
-    await redis_client.set(actual_jti, int(test_user.is_active), ex=60)
-    access_token_data = {'sub': str(user_id)}
-    access_token = create_access_token(data=access_token_data)
+async def test_announcement_wo_file(client_with_cookies_user: AsyncClient):
+
     form_data = {
         "announcement": json.dumps({
             "title": "Test Announcement",
@@ -34,24 +27,14 @@ async def test_announcement_wo_file(async_client: AsyncClient, test_user: UserMo
             "category_id": 1
         })
     }
-    async_client.cookies.set("users_refresh_token", refresh_token)
-    async_client.cookies.set("users_access_token", access_token)
-    response = await async_client.post("/announcements/new-announcement",  data=form_data)
+    response = await client_with_cookies_user.post("/announcements/new-announcement",  data=form_data)
     assert response.status_code == 200
     assert response.json()['ok'] is True
     assert response.json()['detail'] == "Announcement successfully created"
 
 
 @pytest.mark.asyncio
-async def test_announcement_wo_file_failed(async_client: AsyncClient, test_user: UserModel, redis_client: Redis):
-    user_id = test_user.yandex_id
-    refresh_token_data = {'sub': str(user_id), 'type': 'refresh'}
-    refresh_token_info = create_refresh_token(refresh_token_data)
-    refresh_token = refresh_token_info['token']
-    actual_jti = refresh_token_info['token_id']
-    await redis_client.set(actual_jti, int(test_user.is_active), ex=60)
-    access_token_data = {'sub': str(user_id)}
-    access_token = create_access_token(data=access_token_data)
+async def test_announcement_wo_file_failed(client_with_cookies_user: AsyncClient):
     form_data = {
         "announcement": json.dumps({
             "title": "-",
@@ -63,23 +46,12 @@ async def test_announcement_wo_file_failed(async_client: AsyncClient, test_user:
             "category_id": -1
         })
     }
-    async_client.cookies.set("users_refresh_token", refresh_token)
-    async_client.cookies.set("users_access_token", access_token)
-    response = await async_client.post("/announcements/new-announcement",  data=form_data)
+    response = await client_with_cookies_user.post("/announcements/new-announcement",  data=form_data)
     assert response.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_announcement_with_file_success(async_client: AsyncClient, test_user: UserModel, redis_client: Redis):
-    user_id = test_user.yandex_id
-    refresh_token_data = {'sub': str(user_id), 'type': 'refresh'}
-    refresh_token_info = create_refresh_token(refresh_token_data)
-    refresh_token = refresh_token_info['token']
-    actual_jti = refresh_token_info['token_id']
-    await redis_client.set(actual_jti, int(test_user.is_active), ex=60)
-    access_token_data = {'sub': str(user_id)}
-    access_token = create_access_token(data=access_token_data)
-    # Create image files
+async def test_announcement_with_file_success(client_with_cookies_user: AsyncClient):
     test_file = io.BytesIO(
         b'\xFF\xD8\xFF\xE0\x00\x10JFIF\x00\x01\x01\x01\x00\x01\x00\x01\x00\x00\xFF\xDB\x00C\x00'
         b'\x03\x02\x02\x02\x02\x02\x03\x02\x02\x02\x03\x03\x03\x03\x04\x06\x04\x04\x04\x04\x04'
@@ -102,7 +74,7 @@ async def test_announcement_with_file_success(async_client: AsyncClient, test_us
         b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xDA\x00\x08\x01\x01\x00\x00?\x00\xD2\xCF\xFF\xD9'
     )
     image_file.filename = "image.jpg"
-    image_file_content = image_file.read()  # read image file
+    image_file_content = image_file.read()
 
     files = [
         ("file", (image_file.filename, image_file_content, "image/jpeg")),
@@ -120,25 +92,14 @@ async def test_announcement_with_file_success(async_client: AsyncClient, test_us
             "category_id": 1
         })
     }
-    async_client.cookies.set("users_refresh_token", refresh_token)
-    async_client.cookies.set("users_access_token", access_token)
-    response = await async_client.post("/announcements/new-announcement",  data=form_data, files=files)
+    response = await client_with_cookies_user.post("/announcements/new-announcement",  data=form_data, files=files)
     assert response.status_code == 200
     assert response.json()['ok'] is True
     assert response.json()['detail'] == "Announcement successfully created"
 
 
 @pytest.mark.asyncio
-async def test_announcement_validation(async_client: AsyncClient, test_user: UserModel, redis_client: Redis):
-    user_id = test_user.yandex_id
-    refresh_token_data = {'sub': str(user_id), 'type': 'refresh'}
-    refresh_token_info = create_refresh_token(refresh_token_data)
-    refresh_token = refresh_token_info['token']
-    actual_jti = refresh_token_info['token_id']
-    await redis_client.set(actual_jti, int(test_user.is_active), ex=60)
-    access_token_data = {'sub': str(user_id)}
-    access_token = create_access_token(data=access_token_data)
-
+async def test_announcement_validation(client_with_cookies_user):
     text_file = io.BytesIO(
         b'Test'
     )
@@ -173,9 +134,7 @@ async def test_announcement_validation(async_client: AsyncClient, test_user: Use
             "category_id": 1
         }),
     }
-    async_client.cookies.set("users_refresh_token", refresh_token)
-    async_client.cookies.set("users_access_token", access_token)
-    response = await async_client.post("/announcements/new-announcement", data=form_data, files=files)
+    response = await client_with_cookies_user.post("/announcements/new-announcement", data=form_data, files=files)
     assert response.status_code == 400
     assert response.json()['detail'] == 'Incorrect file type'
 
@@ -200,54 +159,31 @@ async def test_get_announcement_failed( async_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_update_announcement(test_user: UserModel,
-                                   async_client: AsyncClient,
-                                   test_announcement: AnnouncementsModel,
-                                   redis_client: Redis):
-    user_id = test_user.yandex_id
-    refresh_token_data = {'sub': str(user_id), 'type': 'refresh'}
-    refresh_token_info = create_refresh_token(refresh_token_data)
-    refresh_token = refresh_token_info['token']
-    actual_jti = refresh_token_info['token_id']
-    await redis_client.set(actual_jti, int(test_user.is_active), ex=60)
-    access_token_data = {'sub': str(user_id)}
-    access_token = create_access_token(data=access_token_data)
+async def test_update_announcement(client_with_cookies_user: AsyncClient,
+                                   test_announcement: AnnouncementsModel):
     form_data = {
         "announcement": json.dumps({
             "title": "updated",
             "description": "updated"
         })
     }
-    async_client.cookies.set("users_refresh_token", refresh_token)
-    async_client.cookies.set("users_access_token", access_token)
-    response = await async_client.put(f'/announcements/announcement/{test_announcement.id}', data=form_data)
+    response = await client_with_cookies_user.put(f'/announcements/announcement/{test_announcement.id}', data=form_data)
     assert response.status_code == 200
     assert response.json()['ok'] == True
-    response = await async_client.get(f'/announcements/announcement/{test_announcement.id}')
+    response = await client_with_cookies_user.get(f'/announcements/announcement/{test_announcement.id}')
     assert response.status_code == 200
     assert response.json()['title'] == 'updated'
     assert response.json()['description'] == 'updated'
 
 
 @pytest.mark.asyncio
-async def test_delete_announcement(test_user: UserModel,
-                                   async_client: AsyncClient,
-                                   test_announcement: AnnouncementsModel,
-                                   redis_client: Redis):
-    user_id = test_user.yandex_id
-    refresh_token_data = {'sub': str(user_id), 'type': 'refresh'}
-    refresh_token_info = create_refresh_token(refresh_token_data)
-    refresh_token = refresh_token_info['token']
-    actual_jti = refresh_token_info['token_id']
-    await redis_client.set(actual_jti, int(test_user.is_active), ex=60)
-    access_token_data = {'sub': str(user_id)}
-    access_token = create_access_token(data=access_token_data)
-    async_client.cookies.set("users_refresh_token", refresh_token)
-    async_client.cookies.set("users_access_token", access_token)
-    response = await async_client.delete(f'/announcements/announcement/{test_announcement.id}')
+async def test_delete_announcement(client_with_cookies_user: AsyncClient,
+                                   test_announcement: AnnouncementsModel):
+
+    response = await client_with_cookies_user.delete(f'/announcements/announcement/{test_announcement.id}')
     assert response.status_code == 200
     assert response.json()['ok'] == True
-    response = await async_client.get(f'/announcements/announcement/{test_announcement.id}')
+    response = await client_with_cookies_user.get(f'/announcements/announcement/{test_announcement.id}')
     assert response.status_code == 404
 
 

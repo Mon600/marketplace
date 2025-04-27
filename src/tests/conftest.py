@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy import text
 
 from api.routers.announcement_router import new_announcement
+from api.utils.auth import create_access_token, create_refresh_token
 from config import Base, get_test_db_url
 from main import app
 from api.depends.session_depend import get_session
@@ -29,8 +30,8 @@ async def test_async_engine() -> AsyncGenerator[AsyncEngine, None]:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
-        await conn.execute(text("INSERT INTO roles (id, role) VALUES (1, 'user'), (2, 'admin') ON CONFLICT (id) DO NOTHING;"))
-        await conn.execute(text("INSERT INTO categories (id, name) VALUES (1, 'test') ON CONFLICT (id) DO NOTHING;"))
+        await conn.execute(text("INSERT INTO roles ( role) VALUES ( 'user'), ( 'admin') ON CONFLICT (id) DO NOTHING;"))
+        await conn.execute(text("INSERT INTO categories (name) VALUES ('test') ON CONFLICT (id) DO NOTHING;"))
     yield engine
     await engine.dispose()
 
@@ -96,13 +97,13 @@ async def banned_user(db_session: AsyncSession) -> UserModel:
 
 
 @pytest_asyncio.fixture(scope="function")
-async def test_announcement(db_session: AsyncSession) -> AnnouncementsModel:
-    new_announcement = AnnouncementsModel(id = 1,
+async def test_announcement(db_session: AsyncSession, test_user: UserModel) -> AnnouncementsModel:
+    new_announcement = AnnouncementsModel(
                                           title='test',
                                           description='test',
                                           price=1000,
                                           category_id=1,
-                                          user_id=1,
+                                          user_id=test_user.yandex_id,
                                           geo="test",
                                           type='sale')
     db_session.add(new_announcement)
@@ -125,3 +126,36 @@ async def async_client(configured_app: FastAPI):
     BASE_URL = "http://test"
     async with AsyncClient(transport=ASGITransport(app=configured_app), base_url=BASE_URL) as client:
         yield client
+
+
+@pytest_asyncio.fixture(scope="function")
+async def client_with_cookies_user(async_client: AsyncClient, redis_client: Redis, test_user: UserModel):
+    user_id = test_user.yandex_id
+    refresh_token_data = {'sub': str(user_id), 'type': 'refresh'}
+    refresh_token_info = create_refresh_token(refresh_token_data)
+    refresh_token = refresh_token_info['token']
+    actual_jti = refresh_token_info['token_id']
+    await redis_client.set(actual_jti, int(test_user.is_active), ex=60)
+    await redis_client.set(f"role_{user_id}", 'user', ex=60)
+    access_token_data = {'sub': str(user_id)}
+    access_token = create_access_token(data=access_token_data)
+    async_client.cookies.set("users_refresh_token", refresh_token)
+    async_client.cookies.set("users_access_token", access_token)
+    return async_client
+
+
+
+@pytest_asyncio.fixture(scope="function")
+async def client_with_cookies_admin(async_client: AsyncClient, redis_client: Redis, test_admin_user: UserModel):
+    user_id = test_admin_user.yandex_id
+    refresh_token_data = {'sub': str(user_id), 'type': 'refresh'}
+    refresh_token_info = create_refresh_token(refresh_token_data)
+    refresh_token = refresh_token_info['token']
+    actual_jti = refresh_token_info['token_id']
+    await redis_client.set(actual_jti, int(test_admin_user.is_active), ex=60)
+    await redis_client.set(f"role_{user_id}", 'admin', ex=60)
+    access_token_data = {'sub': str(user_id)}
+    access_token = create_access_token(data=access_token_data)
+    async_client.cookies.set("users_refresh_token", refresh_token)
+    async_client.cookies.set("users_access_token", access_token)
+    return async_client

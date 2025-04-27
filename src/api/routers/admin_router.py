@@ -27,7 +27,7 @@ async def unban_user(user_id: int,
         raise HTTPException(status_code=500, detail="Something went wrong")
 
 
-@router.put('/deactivate/{announcement_id}/}', summary='Скрытие объявления от пользователей⛔️')
+@router.put('/deactivate/{announcement_id}/', summary='Скрытие объявления от пользователей⛔️')
 async def delete_announcement(announcement_id: int,
                               service: admin_service,
                               status: StatusDep):
