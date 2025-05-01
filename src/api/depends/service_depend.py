@@ -3,13 +3,14 @@ from typing import Annotated
 
 from api.depends.redis_depend import RedisDep
 from api.depends.repositories_depend import user_repository, announcement_repository, file_repository, \
-    category_repository, token_repository, admin_repository
+    category_repository, token_repository, admin_repository, report_repository
 from db.repositories.token_repository import TokenRepository
 from services.admin_service import AdminService
 from services.announcements_service import AnnouncementService
 from services.auth_service import AuthService
 from services.category_service import CategoryService
 from services.file_service import FileService
+from services.report_service import ReportService
 from services.user_service import UserService
 
 
@@ -47,4 +48,12 @@ async def get_admin_service(rep: admin_repository,
                       redis: RedisDep) -> AdminService:
     return AdminService(rep, redis)
 
+
 admin_service = Annotated[AdminService, Depends(get_admin_service)]
+
+
+async def get_report_service(repository: report_repository) -> ReportService:
+    return ReportService(repository)
+
+
+report_service = Annotated[ReportService, Depends(get_report_service)]

@@ -10,6 +10,8 @@ router = APIRouter(tags=['Админ-функционал🛡🗡'], prefix='/ad
 @router.put('/ban/{user_id}', summary="Блокировка пользователя❌")
 async def ban_user(user_id: int,
                    service: admin_service, status: StatusDep):
+    if status != 'admin':
+        raise HTTPException(status_code=401, detail="Access denied")
     try:
         await service.ban(user_id)
         return {"ok": True, "detail": "User has been banned."}
@@ -20,6 +22,8 @@ async def ban_user(user_id: int,
 async def unban_user(user_id: int,
                      service: admin_service,
                      status: StatusDep):
+    if status != 'admin':
+        raise HTTPException(status_code=401, detail="Access denied")
     try:
         await service.unban(user_id)
         return {'ok': True, "detail": "User has been unbanned successfully"}
@@ -43,6 +47,8 @@ async def give_role(user_id: int,
                     role_id: int,
                     service: admin_service,
                     status: StatusDep):
+    if status != 'admin':
+        raise HTTPException(status_code=401, detail="Access denied")
     try:
         await service.give_role(user_id, role_id)
         return {"ok": True, "detail": f"Role with id {role_id} has been gived to user with id {user_id}."}

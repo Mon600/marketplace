@@ -51,10 +51,11 @@ async def get_status(user: current_user_access, service: user_service, redis: Re
         return True
     role = await service.get_user_role(int(user.sub))
     await redis.set(f"role_{user.sub}", role.role, ex=86400)
-    if role.role != 'admin':
-        raise HTTPException(
-            detail="Access denied",
-            status_code=403)
-    return True
+    if role.role == 'admin':
+        return 'admin'
+    elif role.role == 'moderator':
+        return 'moderator'
+    elif role.role == 'user':
+        return HTTPException(status_code=401, detail="Access denied")
 
 StatusDep = Annotated[bool, Depends(get_status)]

@@ -7,6 +7,7 @@ from api.routers.user_router import router as user
 from api.routers.announcement_router import router as announcement
 from api.routers.category_router import router as category
 from api.routers.admin_router import router as admin
+from api.routers.report_router import router as report
 app = FastAPI()
 
 
@@ -15,9 +16,8 @@ app.include_router(auth)
 app.include_router(user)
 app.include_router(announcement)
 app.include_router(category)
-
 app.include_router(admin)
-
+app.include_router(report)
 
 if __name__ == "__main__":
     uvicorn.run(app)

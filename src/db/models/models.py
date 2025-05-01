@@ -2,6 +2,7 @@ import enum
 import uuid
 from datetime import datetime
 
+import sqlalchemy
 from sqlalchemy import Enum as SQLEnum, Boolean, text
 from typing import Optional, Annotated
 
@@ -19,6 +20,16 @@ class AnnouncementType(enum.Enum):
     sale = "sale"
     purchase = "purchase"
 
+class ReportsStatus(enum.Enum):
+    unseen = 'unseen'
+    denied = 'denied'
+    allowed = 'allowed'
+
+class ReportType(enum.Enum):
+    spam = 'spam'
+    ad = 'ad'
+    other = 'other'
+
 
 class UserModel(Base):
     __tablename__ = 'users'
@@ -33,6 +44,7 @@ class UserModel(Base):
     announcements_rel: Mapped[list["AnnouncementsModel"]]  = relationship(back_populates="user_rel")
     roles_rel: Mapped["RoleModel"] = relationship(back_populates="user_rel")
     tokens_rel: Mapped[list["TokenModel"]] = relationship(back_populates="user_rel")
+    reports_rel: Mapped[list["ReportModel"]] = relationship(back_populates="user_rel")
 
 
 class CategoriesModel(Base):
@@ -60,10 +72,12 @@ class AnnouncementsModel(Base):
         index=True,
         nullable=False
     )
+    created_at: Mapped[created_at]
     user_rel: Mapped["UserModel"] = relationship(back_populates="announcements_rel")
     category_id = mapped_column(ForeignKey('categories.id', ondelete='CASCADE'), index=True, nullable=False)
     category_rel: Mapped['CategoriesModel'] = relationship(back_populates="announcements_rel")
     file_rel: Mapped[list["FileModel"]] = relationship(back_populates="announcements_rel")
+    reports_rel: Mapped[list["ReportModel"]] = relationship(back_populates="announcement_rel")
 
 
 class FileModel(Base):
@@ -94,3 +108,17 @@ class TokenModel(Base):
     user_rel: Mapped['UserModel'] = relationship(back_populates="tokens_rel")
     is_banned: Mapped[bool] = mapped_column(default=False)
     issued_at: Mapped[created_at]
+
+
+class ReportModel(Base):
+    __tablename__ = 'reports'
+
+    id: Mapped[pk]
+    announcement_id: Mapped[int] = mapped_column(ForeignKey('announcements.id', ondelete='CASCADE'))
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.yandex_id', ondelete='CASCADE'))
+    reason: Mapped[Optional[str]] = mapped_column(String(256))
+    created_at: Mapped[created_at]
+    status: Mapped[ReportsStatus] = mapped_column(SQLEnum(ReportsStatus, name='report_status'), default='unseen')
+    type: Mapped[ReportType] = mapped_column(SQLEnum(ReportType, name='report_type'), default='unseen')
+    user_rel: Mapped['UserModel'] = relationship(back_populates="reports_rel")
+    announcement_rel: Mapped['AnnouncementsModel'] = relationship(back_populates='reports_rel')
